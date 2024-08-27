@@ -1,0 +1,347 @@
+\documentclass{article}
+
+\usepackage[left=1.25in,top=1.25in,right=1.25in,bottom=1.25in,head=1.25in]{geometry}
+\usepackage{amsfonts,amsmath,amssymb,amsthm}
+\usepackage{verbatim,float,url,enumerate}
+\usepackage{graphicx,subfigure,psfrag}
+\usepackage{natbib}
+\usepackage{environ}
+\usepackage{hyperref}
+\usepackage{pifont}       %Justin
+\usepackage{xcolor}       %Justin
+
+\newtheorem{algorithm}{Algorithm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+\newcommand{\argmin}{\mathop{\mathrm{argmin}}}
+\newcommand{\argmax}{\mathop{\mathrm{argmax}}}
+\newcommand{\minimize}{\mathop{\mathrm{minimize}}}
+\newcommand{\maximize}{\mathop{\mathrm{maximize}}}
+\newcommand{\st}{\mathop{\mathrm{subject\,\,to}}}
+\newcommand{\dist}{\mathop{\mathrm{dist}}}
+
+\newcommand{\reals}{\mathbb R}
+\newcommand{\prox}{\operatorname{prox}}
+\newcommand{\dom}{\operatorname{dom}}
+\def\R{\mathbb{R}}
+\def\E{\mathbb{E}}
+\def\P{\mathbb{P}}
+\def\Cov{\mathrm{Cov}}
+\def\Var{\mathrm{Var}}
+\def\half{\frac{1}{2}}
+\def\sign{\mathrm{sign}}
+\def\supp{\mathrm{supp}}
+\def\th{\mathrm{th}}
+\def\tr{\mathrm{tr}}
+\def\dim{\mathrm{dim}}
+\def\hbeta{\hat{\beta}}
+
+\begin{document}
+
+\title{Homework 2}
+\author{\Large Convex Optimization 10-725/36-725}
+\date{{\bf Due Friday, September 28 at 11:59pm} \\
+Submit your work as a single PDF on Gradescope. Make sure to prepare your
+solution to each problem on a separate page. (Gradescope will ask you select the
+pages which contain the solution to each problem.) \\
+\bigskip Total: 86 points}
+\maketitle
+
+
+\section{Subgradients and Proximal Operators (18 pts) [Wenbo]}
+
+% Practice computing Subgradients and proxial maps
+% ell_0, ell_\infty, ell_2
+% proximal for entropy
+\begin{enumerate}[(a)]
+    \item   Recall that subgradient can be viewed as a generalization of gradient for general functions. Let $f$ be a function from $\R^n$ to $\R$. The subdifferential of $f$ at $x$ is defined as $\partial f(x) = \{g\in\R^n: g\text{ is a subgradient of $f$ at $x$}\}$.
+        \begin{enumerate}
+            \item[(i, 2 pts)]  Show that $\partial f(x)$ is a convex and closed
+              set. 
+
+            \item[(ii, 2 pts)] Show that $\partial f(x) \subseteq N_{\{y: f(y) \leq f(x) \}}(x)$, where recall $N_C(x)$ denotes the normal cone to a set $C$ at a point $x$. Give an example to show that this containment can be strict.
+
+            \item[(iii, 2 pts)] Let $p, q > 0$ such that $\frac{1}{p} +
+              \frac{1}{q} = 1$. Consider the function $f(x) = ||x||_p=(\sum_{i=1}^n
+              x_i^p)^{1/p}$. Show that $\forall x, y$:
+            $$x^Ty \leq ||x||_p||y||_q.$$
+            The above inequality is known as H\"{o}lder's inequality.  Hint: you
+            may use the dual representation of the $\ell_p$ norm, namely,
+            $||x||_p = \max_{||z||_q \leq 1} z^T x$.
+
+            \item [(iv, 3 pts)] Use H\"{o}lder's inequality to show
+              that for $f(x)=||x||_p$, its subdifferential is $\partial f(x) =
+              \argmax_{||z||_q \leq 1} z^T x$. (You are not allowed to use the
+              rule for the subdifferential of a max of functions for this
+              problem.)  
+        \end{enumerate}
+
+    \item   The proximal operator for function $h: \R^n\mapsto\R$ and $t > 0$ is defined as:
+            $$\prox_{h,t}(x) = \argmin_{z}\frac{1}{2}||z-x||_2^2 + th(z)$$
+            Compute the proximal operators $\prox_{h,t}(x)$ for the following functions.
+
+            % [Hint]: There is an identity that holds for proximal operators, known as Moreau decomposition:
+            % $$x = \prox_{h, t}(x) + t\prox_{h^*, 1/t}(x/t)$$
+            % where $h^*(x)$ is the convex conjugate function of $h(x)$, defined as:
+            % $$h^*(x) = \sup_{y}x^Ty - h(y)$$
+            % Feel free to use this theorem for this question.
+            \begin{enumerate}
+                \item[(i, 2 pts)]  $h(z) = \frac{1}{2}z^TAz + b^Tz + c$, where $A\in\mathbb{S}_+^n$.
+
+                \item[(ii, 2 pts)]  $h(z) = \sum_{i=1}^n z_i \log z_i$, where $z\in\R_{++}^n$.
+                Hint: you may refer to the Lambert $W$-function when solving for the proximal.
+
+                \item[(iii, 2 pts)] $h(z) = ||z||_2$.
+
+                \item[(iv, 3 pts)] $h(z) = ||z||_0$, where $||z||_0$ is defined as $||z||_0 = |\{z_i: z_i \neq 0, i = 1,\ldots, n\}|$.
+                
+                \item[(\textbf{Bonus})] $h(z) = \sum_{i=1}^{n}\lambda_i |z|_{(i)}$, where $z \in \mathbb{R}^n$, $\lambda_1 \geq  \lambda_2 \geq \ldots \geq \lambda_n \geq 0$, and $|z|_{(1)} \geq |z|_{(2)} \geq \ldots \geq |z|_{(n)}$ are the ordered absolute values of the coordinates of $z$. This is called the sorted-$l_1$ norm of $z$.
+                Hint: you may consider the relation of the sign of $x_i$ and $z_i$; and sort the entries in $x$ and consider their correspondence with the sorted entries in $|z|$.
+            \end{enumerate}
+\end{enumerate}
+
+
+
+
+\section{Properties of Proximal Mappings and Subgradients (18 points) [Akash]}
+\begin{enumerate}
+
+    \item[(a, 4pts)] Prove one direction of the finite pointwise maximum rule
+      for subdifferentials: The subdifferential of $f(x) = \max_{i=1,\dots, n}
+      f_i(x)$, for convex $f_i$, $i=1,\ldots,m$, satisfies
+        \begin{align}
+            \partial f(x) \supseteq \operatorname{conv}\left( \bigcup_{i : f_i(x) = f(x)} \partial f_i(x)  \right).
+        \end{align}
+
+    \item[(b, 4pts)] Recall the definition of the proximal mapping: For a function $h$, the proximal mapping $\prox_t$ is defined as
+        \begin{align}
+            \prox_t(x) = \argmin_{u} \frac{1}{2t} \| x-u\|_2^2 + h(u).
+        \end{align}
+ Show that $\prox_t(x) = u \Leftrightarrow h(y) \geq h(u) + \frac 1 t (x - u)^\top (y - u) \quad \forall y$.
+
+    \item[(c, 5 pts)] Show how we can compose an affine mapping with the proximal operator. That is, assuming $f(x) = g(Ax + b)$, where $x \in R^n$, $A \in R^{m^*n}$, and $b \in R^m$, and also assuming $AA^T = aI_m$, for some scalar $a>0$, then
+        \begin{align}
+            \prox_{f}(x) = x + \frac{1}{a} A^T \left(\prox_{a g}(Ax+b) - Ax - b \right)
+        \end{align}
+    Hint: you may find it helpful to reparameterize $g(Ax + b)$ as $g(z)$ with the constraint that $z = Ax + b$, and then apply this constraint as a Lagrange multipler.  
+
+    \item[(d, 5 pts)] Show that if $\forall y \in \operatorname{dom}(g)$, $\partial g(\prox_f (y)) \supseteq \partial g(y)$, then 
+        \begin{align}
+            \prox_{f+g}(x) = \prox_{f}(\prox_{g}(x))
+        \end{align}
+    Hints: 
+    \begin{enumerate}
+        \item[1.] Consider $\prox_{f+g}(x)$, $\prox_g(x)$, and $\prox_f (\prox_g (x))$.
+        \item[2.] The solution of the proximal can be characterized as: 
+        \[
+            u = \prox_h(x) := \argmin_u \frac 1 2 \| u - x\|_2^2 + h(u) 
+                \iff 
+            0 \in u - x + \partial h(u) 
+        \]
+        \item[3.] $\partial (f+g) = \partial f + \partial g$
+    \end{enumerate}
+    %\item[(c, 2 pts)] Prove the fixed point theorem of the proximal mapping. For $t>0$,
+    %    \begin{align}
+    %        x^* \in \operatorname{argmin}(h(x)) \Leftrightarrow x^* = \prox_{h,t}(x^*).
+    %    \end{align}
+\end{enumerate}
+\section{Convergence Rate for Proximal Gradient Descent (20 pts) [Po-Wei]}
+In this problem, you will show the sublinear convergence for gradient descent and proximal gradient descent, which was presented in class. 
+
+To be clear, 
+we assume that the objective $f(x)$ can be written as $f(x) = g(x) + h(x)$, where
+\begin{enumerate}
+\item[(A1)] $g$ is convex, differentiable, and $\dom(g) = \reals^n$.
+\item[(A2)] $\nabla g$ is Lipschitz, with constant $L > 0$.
+\item[(A3)] $h$ is convex, not necessarily differentiable, and we take $\dom(h) = \reals^n$ for simplicity.
+\end{enumerate}
+
+\begin{enumerate}
+\item[(a)]
+We begin with the simple case $f(x)=g(x)$; that is, $h(x)=0$ and can be ignored.
+We will prove that the gradient descent converges sublinearly in this case.
+As a reminder, the iterates of gradient descent is computed by
+\begin{equation}
+x^{+} = x - t \nabla g(x), \label{eq:q3:1}
+\end{equation}
+where $x^{+}$ is the iterate succeeding $x$.  Henceforth, we will set $t=1/L$
+for simplicity. 
+
+    \begin{enumerate}
+    \item[(i, 3pt)] Show that 
+    \[
+            g(x^+)-g(x) \leq -\frac{1}{2L}\|\nabla g(x)\|^2.
+    \]
+    That is, the objective value is monotonically decreasing in each update.
+    This is why gradient descent is called a ``descent method.''
+    \item[(ii, 3pt)] Using convexity of $g$, show the following helpful
+      inequality: 
+    \[
+            g(x^+) - g(z) \leq \nabla g(x)^T(x-z) - \frac{1}{2L}\|\nabla g(x)\|^2,\quad\forall z\in\mathbb{R}^n.
+    \]
+    \item[(iii, 2pt)] Show that 
+    \[
+            g(x^+)-g(x^\star) \leq \frac{L}{2}\left(\|x-x^\star\|^2-\|x^+-x^\star\|^2\right),
+    \]
+    where $x^{\star}$ is the minimizer of $g$, assuming $g(x^\star)$ is finite.
+    %By the way, this result, taken together with what you showed in part (i),
+    %implies that we move closer to the optimal point(s) on each iteration of
+    %gradient descent. 
+    \item[(iv, 2pt)] Now, aggregating the last inequality over all steps
+      $i=0,\ldots,k$, show that the accuracy of gradient descent at iteration
+      $k$ is $O(1/k)$, i.e.,   
+    \[
+            g(x^{(k)}) - g(x^\star) \leq \frac{L}{2k}\|x^{(0)}-x^\star\|^2.
+    \]
+    Put differently, for an $\epsilon$-level accuracy, you need to run at most $O(1/\epsilon)$ iterations.
+    \end{enumerate}
+
+\item[(b)] 
+Now consider the general $h$ in assumption (A3).
+We will prove that the proximal gradient descent converges sublinearly under such assumptions.
+Specifically, the iterates of proximal gradient descent is computed by
+\begin{equation}
+x^{+} = \textrm{prox}_{t h} \left( x - t \nabla g(x) \right), \label{eq:q3:2}
+\end{equation}
+where again we will set $t=1/L$ for simplicity. Further, we define the useful
+notation 
+    \[
+            G(x) = \frac{1}{t}\left(x-x^+\right).
+    \]
+                We will see (in the following proofs) that $G(x)$ behaves like $\nabla g(x)$ in gradient descent.
+    \begin{enumerate}
+    \item[(i, 3pt)] Show that
+    \[
+            g(x^+)-g(x) \le -\frac{1}{L}\nabla g(x)^TG(x)+\frac{1}{2L}\|G(x)\|^2.
+    \]
+    \item[(ii, 3pt)] Show that 
+    \[ 
+                    f(x^+)-f(z) \leq G(x)^T(x-z) - \frac{1}{2L}\|G(x)\|^2,\quad\forall z\in\mathbb{R}^n.
+    \]
+    Note that setting $z:=x$ verifies the proximal gradient descent is a ``descent method.''
+    (Hint: Look back at what you did in Q2 part (b) and add the missing $h$ to (i).)
+    \item[(iii, 4pt)] Show that
+    \[
+            f(x^+)-f(x^\star) \leq \frac{L}{2}\left(\|x-x^\star\|^2-\|x^+-x^\star\|^2\right),
+    \]
+    where $x^\star$ is the minimizer of $f$.
+    Then show that 
+    \[
+            f(x^{(k)}) - f(x^\star) \leq \frac{L}{2k}\|x^{(0)}-x^\star\|^2.
+    \]
+    That is, the proximal descent method achieves $O(1/k)$ accuracy at the $k$-th iteration.
+    \end{enumerate}
+
+\end{enumerate}
+{\bf Bonus.} If we further assume $g$ being strongly convex with constant $m$, show that
+the proximal gradient descent converges linearly, that is,
+\[
+        f(x^+)-f(x^\star) \le \left(1-\frac{m}{L}\right) \left(f(x)-f(x^\star)\right).
+\]
+You can use the following lemma.
+\begin{lemma}[Proximal Polyak-\L{}ojasiewicz Inequality]\label{lemma:PL}
+        Let $\lambda>0$ be a scalar. Define
+        \[
+                \phi(x;\lambda) = -2\lambda\min_{y} \left(\nabla g(x)^T(y-x)+\frac{\lambda}{2}\|y-x\|^2+h(y)-h(x)\right),
+        \]
+        then
+        \[
+                \phi(x;\lambda_1) \leq \phi(x;\lambda_2)\quad\text{if}\quad \lambda_1\leq\lambda_2.
+        \]
+\end{lemma}
+Note that $\phi(x;\lambda)$ is related the minimum objective value in the proximal operators.\\
+Hint: Bound $f(x)-f(x^\star)$ and $f(x)-f(x^+)$ using $\phi$.
+\section{Stochastic \& Proximal Gradient Descent (30 points) [Po-Wei, Wenbo, Akash]}
+% Group Lasso problem, ell_2 and ell_intfy penalty
+% Implement Backtracking and Acceleration
+Suppose predictors (columns of the design matrix $X\in\R^{n \times (p+1)}$) in a
+regression problem split up into $J$ groups:
+\begin{equation}
+X = \left[ \mathbf{1}\; X_{(1)} \; X_{(2)} \; \dots \;X_{(J)} \right]
+\end{equation}
+where $\mathbf{1} = (1\; 1 \; \cdots \;1) \in \mathbb{R}^n$. 
+To achieve sparsity over non-overlapping groups rather than individual 
+predictors, we may write $\beta = (\beta_0, \beta_{(1)}, \dots,
+\beta_{(J)})$, where $\beta_0$ is an intercept term and each
+$\beta_{(j)}$ is an appropriate coefficient block of $\beta$
+corresponding to $X_{(j)}$, and solve the regularized regression problem:
+\begin{equation}
+\label{eq:group_lasso}
+  \min_{\beta \in \mathbb{R}^{p+1}} \; 
+        g(\beta) + h(\beta).
+\end{equation}
+In the following problems, we will use linear regression to predict the Parkinson’s disease (PD) symptom score on the \texttt{Parkinsons} dataset. The PD symptom score is measured on the unified Parkinson’s disease rating scale (UPDRS). 
+This data contains $5,785$ observations, $18$ predictors (in \texttt{X\_train.csv}), and an outcome---the toal UPDRS (in \texttt{y\_train.csv}).
+The data were collected at the University of Oxford, in collaboration with 10 medical centers in the US and Intel Corporation.
+The $18$ columns in the predictor matrix have the following groupings (in column ordering):
+\begin{itemize}
+  \item \texttt{age}: Subject age in years
+  \item \texttt{sex}: Subject gender, `0'--male, `1'--female
+  \item \texttt{Jitter(\%), Jitter(Abs), Jitter:RAP, Jitter:PPQ5, Jitter:DDP}: Several measures of variation in fundamental frequency of voice
+  \item \texttt{Shimmer, Shimmer(dB), Shimmer:APQ3, Shimmer:APQ5, Shimmer:APQ11, Shimmer:DDA}: Several measures of variation in amplitude of voice
+  \item \texttt{NHR, HNR}: Two measures of ratio of noise to tonal components in the voice
+  \item \texttt{RPDE}: A nonlinear dynamical complexity measure
+  \item \texttt{DFA}: Signal fractal scaling exponent
+  \item \texttt{PPE}: A nonlinear measure of fundamental frequency variation
+\end{itemize}
+
+\begin{enumerate}[1)]
+        \item We first consider the ridge regression problem, where $h(\beta)=\frac{\lambda}{2}\|\beta\|^2_2$:
+    \begin{align}
+    \min_{\beta \in \mathbb{R}^{p+1}}\; \frac{1}{2N}\|X\beta-y\|^2 + \frac{\lambda}{2} \|\beta\|_2^2
+    \label{eq:least_squares}
+    \end{align}
+    where $N$ is the number of samples.
+    Note: in your implementation for this problem, if you added a ones vector to $X$ ($X = \left[ \mathbf{1}\; X_{(1)} \; X_{(2)} \; \dots \;X_{(J)} \right]$), you should not include the bias term $\beta_0$ associated with the ones vector in the penalty.
+
+    \begin{enumerate}[(a)]
+        \item (2 pt) Derive the stochastic gradient update w.r.t. a batch-size $B$ and a step-size $t$. Hint: you will need to a separate update for $\beta_0$ since it should not be penalized.
+
+        \item (5 pt) Implement the stochastic gradient descent algorithm to solve the ridge regression
+    problem (\ref{eq:least_squares}). Initialize $\beta$ with random normal values. Fit the model parameters on the training data (\texttt{X\_train.csv}, \texttt{Y\_train.csv}) and evaluate the objective function after each epoch (you will need to plot these values later). Set $\lambda=1$. Try different batch-sizes from $\{10, 20, 50, 100\}$ and different step-sizes from $\{10^{-2}, 10^{-3}, 10^{-4}, 10^{-5}\}$. Train for $500$ epochs (an epoch is one iteration though the dataset).
+    
+        \item (3 pt) Plot $f^{k}-f^\star$ versus $k$ ($k=1, \ldots, 500$) on a semi-log scale (i.e. where the y-axis is in log scale) for all setting combinations, where $f^{k}$ denotes the objective value averaged over all samples at epoch $k$,  and the optimal objective value is $f^\star = 57.0410$. What do you find? How do the different step sizes and batch sizes affect the learning curves (i.e. convergence rate, final convergence value, etc.)?
+    \end{enumerate}
+  
+    
+    \item Next, we consider the least squares group LASSO problem, where $h(\beta)=\lambda\sum_jw_j\|\beta_{(j)}\|_2$:
+    \begin{align}
+            \min_{\beta \in \mathbb{R}^{p+1}}\; \frac{1}{2N}\|X\beta-y\|^2 + \lambda \sum_j w_j\|\beta_{(j)}\|_2
+    \end{align}
+    A common choice for weights on
+            groups $w_j$ is $\sqrt{p_j}$, where $p_j$ is number of predictors that
+            belong to the $j$th group, to adjust for the group sizes.  
+
+                We will solve the problem using proximal gradient descent algorithm (over the whole dataset).
+    \begin{enumerate}[(a)]
+        \item (5 pt) Derive the proximal operator $\text{prox}_{h,t}(x)$ for the non-smooth component $h(\beta) = \lambda \sum_{j=1}^J w_j
+  \|\beta_{(j)}\|_2$.
+        
+        \item (2 pt) Derive the proximal gradient update for the objective.
+        
+        \item (5 pt) Implement proximal gradient descent to solve the least squares group lasso
+    problem on the \texttt{Parkinsons} dataset. Set $\lambda=0.02$. Use a fixed step-size $t=0.005$ and run for $10000$ steps.
+    
+        \item (5 pt) 
+        Plot $f^{k}-f^\star$ versus $k$ for the first 10000 iterations ($k=1, \ldots, 10000$) on a semi-log scale (i.e. where the y-axis is in log scale) for both train and test data, where $f^{k}$ denotes the objective value averaged over all samples at step $k$, and the optimal objective value is $f^\star = 49.9649$.
+        Print the components of the solutions numerically. What are the selected groups?
+        
+        \item (3 pt) Now implement the LASSO (hint: you shouldn't have to do any additional coding), with fixed step-size $t=0.005$ and $\lambda=0.02$. Run accelerated proximal gradient descent for $10000$ steps. Compare the LASSO solution with your group lasso solutions.
+
+        \item (\textbf{Bonus})
+                Implement accelerated proximal gradient descent with fixed step-size under the same setting in part (c). Hint: be sure to exclude the bias term $\beta_0$ from the proximal update, just use a regular accelerated gradient update.
+        Plot $f^{k}-f^\star$ versus $k$ for both methods (unaccelerated and
+        accelerated proximal gradient) for $k=1, \ldots, 10000$ on a semi-log
+        scale and compare the selected groups.  What do you find?
+
+    \end{enumerate}
+    
+\end{enumerate}
+\end{document}

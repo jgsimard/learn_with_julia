@@ -1,0 +1,326 @@
+\documentclass{article}
+
+\usepackage[left=1.25in,top=1.25in,right=1.25in,bottom=1.25in,head=1.25in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{verbatim,float,url,enumerate}
+\usepackage{graphicx,subfigure,psfrag}
+\usepackage{natbib}
+\usepackage{environ}
+\usepackage{hyperref}
+\usepackage{mathtools}
+
+\newtheorem{algorithm}{Algorithm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+\newcommand{\argmin}{\mathop{\mathrm{argmin}}}
+\newcommand{\argmax}{\mathop{\mathrm{argmax}}}
+\newcommand{\minimize}{\mathop{\mathrm{minimize}}}
+\newcommand{\maximize}{\mathop{\mathrm{maximize}}}
+\newcommand{\st}{\mathop{\mathrm{subject\,\,to}}}
+
+\def\R{\mathbb{R}}
+\def\E{\mathbb{E}}
+\def\P{\mathbb{P}}
+\def\Cov{\mathrm{Cov}}
+\def\Var{\mathrm{Var}}
+\def\sign{\mathrm{sign}}
+\def\supp{\mathrm{supp}}
+\def\th{\mathrm{th}}
+\def\tr{\mathrm{tr}}
+\def\dim{\mathrm{dim}}
+\def\hbeta{\hat{\beta}}
+\def\prox{\mathrm{prox}}
+\def\dom{\mathrm{dom}}
+
+\begin{document}
+
+\title{Homework 5}
+\author{\Large Convex Optimization 10-725}
+\date{{\bf Due Friday, November 30 at 11:59pm} \\
+\bigskip
+Submit your work as a single PDF on Gradescope. Make sure to prepare your
+solution to each problem on a separate page. (Gradescope will ask you select 
+the pages which contain the solution to each problem.) \\
+\bigskip 
+Total: 72 points\\
+}
+\maketitle
+
+\section{Exponential families and convexity (24 points)}
+
+In this problem, we'll study convexity (and concavity) in exponential families
+and generalized linear models. Consider an {\it exponential family} density (or
+probability mass) function over $y \in D \subseteq \R^n$, of the form 
+\begin{equation}
+\label{eq:expfam} 
+f(y; \theta) = \exp \big(y^T\theta - b(\theta) \big) f_0(y).
+\end{equation}
+Note $\theta \in \R^n$ is called the {\it natural parameter} in this family.
+
+\begin{enumerate}
+\item (6 pts) Prove that $b : C \rightarrow \R$ is a convex function, where $C = 
+  \dom(b)$. Hint: use the fact that $f(y; \theta)$ is a density (or probability
+  mass) function to derive an expression for $b(\theta)$.
+
+\item (2 pts) Assume that $\theta_i = x_i^T \beta$ for each $i=1,\ldots n$, 
+  where $x_i \in \R^p$ are predictor measurements (considered fixed,
+  i.e., nonrandom) and $\beta \in \R^p$ is a coefficient vector.
+  Prove that the domain of $\beta$, $B = \{\beta : (x_1^T \beta, \ldots
+  x_n^T \beta) \in C\}$, is a convex set.
+
+\item (3 pts) Write down the log likelihood function $\ell(\beta; Y)$ for a random 
+  vector $Y \in \R^n$ drawn from the distribution in \eqref{eq:expfam}.  
+  Prove that maximizing this log likelihood over $\beta \in B$ is a concave
+  maximization problem, i.e., a convex optimization problem.  
+
+  Note: taking $\theta_i=x_i^T \beta$, $i=1,\ldots n$ as we've done is
+  the same as considering a {\it generalized linear model} with {\it canonical
+    link function}.  What you've just shown: maximum likelihood in any
+  generalized linear model (with canonical link) is a convex optimization
+  problem. 
+
+\item (4 pts) Argue that when $b(\theta) = \|\theta\|_2^2/2$, the maximum log 
+  likelihood problem is the same as linear regression, and that when 
+  $b(\theta) = \sum_{i=1}^n \log(1+\exp(\theta_i))$, it is the same as logistic
+  regression. 
+
+\item (9 pts) Argue whether or not each of the following regularized maximum
+  likelihood problems is a convex optimization problem, as written.  Your
+  justifications can be one line (or less).  Below, $\lambda,t,k \geq 0$ are all
+  constants.    
+\begin{enumerate}
+\item $\max_{\beta \in B} \ell(\beta) - \lambda \|\beta\|_1$
+\item $\max_{\beta \in B} \ell(\beta)$ subject to $\beta_1 \geq 0,
+  \ldots \beta_p \geq 0$ 
+\item $\max_{\beta \in B} \ell(\beta)$ subject to $\beta^T Q \beta = t$, for a 
+  matrix $Q \succeq 0$
+\item $\max_{\beta \in B} \ell(\beta)$ subject to $\|\beta\|_2 \leq t$
+\item $\max_{\beta \in B} \ell(\beta) - \lambda \log \sum_{i\not= j}
+  \exp (\beta_i-\beta_j)$
+\item $\max_{\beta \in B} \ell(\beta)$ subject to 
+  $\max_{i=1,\ldots p-1} |\beta_i-\beta_{i+1}| \leq t$ 
+\item $\max_{\beta \in B} \ell (\beta)$ subject to $\max_{\alpha :
+    \|\alpha\|_0 \leq k} \|\beta-\alpha\|_2 \leq t$ 
+\item $\max_{\beta \in B} \ell (\beta)$ subject to $\min_{\alpha :
+    \|\alpha\|_0 \leq k} \|\beta-\alpha\|_2 \leq t$ 
+\item $\max_{\beta \in B} \ell (\beta)$ subject to $\beta_1 A_1 +
+  \ldots + \beta_p A_p \succeq 0$, for symmetric matrices $A_1,\ldots A_p$
+\end{enumerate}
+\end{enumerate}
+
+\section{Subgradients, conjugates, and duality (24 points)}
+
+Let $f$ be a closed and convex function, and let $f^*$ its conjugate.  Recall
+that for a linear map $A$, the problem
+\begin{equation}
+\label{eq:primal}
+\min_x \; f(x) + g(Ax)
+\end{equation}
+has a dual problem
+\begin{equation}
+\label{eq:dual}
+\max_y \; -f^*(-A^T y) - g^*(y).
+\end{equation}
+Suppose that $g$ is convex and has a known proximal operator   
+$$
+\prox_{g,t} (x) = \argmin_z \; \frac{1}{2t} \|x-z\|_2^2 + g(z).  
+$$
+Note that this {\it does not} necessarily mean that we know the proximal
+operator for $h(x)=g(Ax)$.  Therefore we cannot easily apply proximal gradient
+descent to the primal problem \eqref{eq:primal}.  However, as you will show in
+the next few parts, knowing the proximal mapping of $g$ {\it does} lead to
+the proximal mapping of $g^*$, which leads to an algorithm on the dual problem 
+\eqref{eq:dual}.
+
+\begin{enumerate}
+\item (5 pts) Show that
+  $$
+  y \in \partial f(x) \iff x \in \partial f^*(y).
+  $$
+  Hint: show that $y \in \partial f(x) \Rightarrow x \in \partial f^*(y)$ by using
+  the rule for subgradients of a maximum of functions.  Then apply what you know
+  about $f^{**}$ for closed, convex $f$ to show the converse. 
+
+\item (4 pts) Assume henceforth that $f$ is strictly convex.  Show that this
+  implies $f^*$ is differentiable, and that 
+  $$
+  \nabla f^*(y) = \argmin_x \; f(x) - y^T x.
+  $$
+  Hint: use part 1.
+
+\item (5 pts) Prove that  
+  $$
+  \prox_{g,1}(x) + \prox_{g^*,1}(x) = x,
+  $$
+  for all $x$. This is called {\it Moreau's theorem}.  Note the specification
+  $t=1$ in the above.  Hint: again use part 1.  
+
+\item (5 pts) Verify that for $t>0$, we have $(tg)^*(x) = tg^*(x/t)$.  Use this,  
+  and part 3, to prove that for any $t>0$,
+  $$
+  \prox_{g,t}(x) + t \cdot \prox_{g^*,1/t}(x/t) = x,
+  $$
+  for all $x$.   Hint: apply part 3 to the function $tg$. Then note
+  $\prox_{g,t}(x)=\prox_{tg,1}(x)$, and the same for $g^*$.  
+
+\item (5 pts) Lastly, write down a proximal gradient descent algorithm for the
+  dual problem \eqref{eq:dual}.   Use parts 2 and 4 of this question to express
+  all quantities in terms of $f$ and $g$. That is, your proximal gradient
+  descent updates should not have any appearances of $\nabla f^*$ or
+  $\prox_{g^*,t}(\cdot)$.     
+\end{enumerate} 
+
+\section{Coordinate descent and Dykstra (17 points)}
+
+Given $y \in \R^n$, $X \in \R^{n \times p}$, consider the regularized least squares program 
+\begin{equation}
+\label{eq:reg}
+\min_{w \in \R^p} \; \frac{1}{2} \|y - Xw\|_2^2 + 
+\sum_{i=1}^d h_i(w_i), 
+\end{equation}
+where $w = (w_1,\ldots,w_d)$ is a block decomposition with $w_i \in \R^{p_i}$,
+$i=1,\ldots,d$, and where $h_i$, $i=1,\ldots,d$ are convex functions.  Let
+$X_i \in \R^{n \times p_i}$, $i=1,\ldots,d$ be a corresponding block
+decomposition of the columns of $X$, and $g(w) = \|y-Xw\|_2^2/2$. 
+
+\begin{enumerate}
+
+\item (4 pts) Consider coordinate descent, which repeats the following updates: 
+  \begin{equation}
+    \label{eq:cd}
+  w_i^{(k)} = \argmin_{w_i \in \R^{p_i}} \; \frac{1}{2} \bigg\| y - \sum_{j<i}
+  X_j w_j^{(k)} - \sum_{j>i} X_j w_j^{(k-1)} - X_iw_i \bigg\|_2^2 + h_i(w_i),
+  \quad i=1,\ldots,d, 
+  \end{equation}
+  for $k=1,2,3,\ldots$.  Consider also coordinate proximal gradient descent,
+  which repeats:
+  \begin{equation}
+    \label{eq:cgd}
+  w_i^{(k)} = \prox_{h_i,t_{ki}} \Big( w_i^{(k-1)} - 
+  t_{ki} \nabla_i g(w_1^{(k)},\ldots,w_{i-1}^{(k)},w_i^{(k-1)},\ldots,w_d^{(k-1)})
+  \Big), \quad i=1,\ldots,d, 
+  \end{equation}
+  for $k=1,2,3,\ldots$.  Assume we initialize these algorithms at the same
+  point.  Show that when each $p_i=1$ (all coordinate blocks are of size 1),
+  under appropriate step sizes for coordinate proximal gradient descent, these
+  two methods are exactly the same. (Assume each $X_i\neq 0$.)
+
+\item (2 pts) When at least one $p_i>1$, give an example to show that these two
+  methods are not the same, for any choice of step sizes in coordinate proximal
+  gradient descent. 
+
+\item (3 pts) Assume henceforth that $h_i$, $i=1,\ldots,d$ are each support
+  functions 
+  $$
+  h_i(v) =\max_{u \in D_i} \; \langle u,v \rangle, \quad i=1,\ldots,d.   
+  $$
+  where $D_i \subseteq \R^{p_i}$, $i=1,\dots,d$ are closed, convex sets.
+  Show that the dual of \eqref{eq:reg} is what is sometimes called the {\it best
+    approximation problem}
+  \begin{equation}
+    \label{eq:bap}
+    \min_{u \in \R^n} \; \|y-u\|_2^2 
+    \quad \st \quad u \in C_1 \cap \cdots \cap C_d.
+  \end{equation}
+  where each $C_i = (X_i^T)^{-1}(D_i) \subseteq \R^n$, the inverse image of
+  $D_i$ under the linear map $X_i^T$.  Show also that the relationship between
+  the primal and dual solutions $w,u$ is 
+  \begin{equation}
+    \label{eq:prim_dual}
+    u = y - Xw
+  \end{equation}
+
+\item (2 pts) Assume that each $X_i$ has full column rank. Show that,
+  for each $i$ and any $a \in \R^n$,
+  $$
+  w^*_i = \argmin_{w_i \in \R^{p_i}} \; \frac{1}{2} \| a - X_iw_i \|_2^2 
+  + h_i(w_i) 
+  \quad \iff \quad 
+  X_iw^*_i = a - P_{C_i}(a).
+  $$
+  Hint: write $X_iw_i^*$ in terms of a proximal operator then use Moreau's
+  theorem in Q2 part 3.  
+
+\item (6 pts) {\it Dykstra's algorithm} for problem \eqref{eq:bap} can be
+  described as follows.  We initialize $u_d^{(0)}=y$,
+  $z_1^{(0)}=\cdots=z_d^{(0)}=0$, and then repeat:  
+  \begin{equation}
+    \begin{aligned}
+      \label{eq:dyk}
+      &u_0^{(k)} = u_d^{(k-1)}, \\
+      &\begin{rcases*}
+        u_i^{(k)} = P_{C_i} (u_{i-1}^{(k)} + z_i^{(k-1)}), & \\
+        z_i^{(k)} = u_{i-1}^{(k)} + z_i^{(k-1)} - u_i^{(k)}, &
+      \end{rcases*}
+      \quad \text{for $i=1,\ldots,d$},
+    \end{aligned}
+  \end{equation}
+  for $k=1,2,3,\ldots$.  As $k \to \infty$, the iterate $u_0^{(k)}$ in
+  \eqref{eq:dyk} will approach the solution in \eqref{eq:bap}.
+
+  Assuming that we initialize $w^{(0)}=0$, show that coordinate descent
+  \eqref{eq:cd} for problem \eqref{eq:reg} and Dykstra's algorithm
+  \eqref{eq:dyk} for problem \eqref{eq:bap} are in fact completely equivalent,
+  and satisfy  
+  $$
+  z_i^{(k)} = X_iw_i^{(k)} \quad\text{and}\quad
+  u_i^{(k)}=y - \sum_{j \leq i} X_j w_j^{(k)} - \sum_{j > i} X_j  
+  w_j^{(k-1)}, \quad\text{for $i=1,\ldots,d$},
+  $$
+  at all iterations $k=1,2,3,\ldots$.  Hint: use an inductive argument, and the
+  result in part 4.
+
+\item (Bonus, 3 pts) Let $\gamma_1,\ldots,\gamma_d>0$ be arbitrary weights with   
+  $\sum_{i=1}^d \gamma_i = 1$.  Consider the problem
+  \begin{equation}
+    \label{eq:bap_prod}
+    \min_{u=(u_1,\ldots,u_d) \in \R^{nd}} \; \sum_{i=1}^d \gamma_i
+    \|y-u_i\|_2^2  
+    \quad \st \quad u \in C_0 \cap (C_1 \times \cdots \times C_d), 
+  \end{equation}
+  where $C_0=\{ (u_1,\ldots,u_d) \in \R^{nd} : u_1=\cdots=u_d\}$.  Observe that
+  this is equivalent to \eqref{eq:bap}, and is sometimes called the {\it
+    product-space reformulation} of \eqref{eq:bap}, or the {\it consensus form}
+  of \eqref{eq:bap}. 
+
+  Rescale \eqref{eq:bap_prod} to turn the loss into an unweighted squared loss,
+  then apply Dykstra's algorithm to the resulting best approximation problem. 
+  Show that the resulting algorithm repeats:  
+  \begin{equation}
+    \begin{aligned}
+      \label{eq:dyk_par}
+      &u_0^{(k)} = \sum_{i=1}^d \gamma_i u_i^{(k-1)}, \\ 
+      &\begin{rcases*}
+        u_i^{(k)} = P_{C_i} (u_0^{(k)} + z_i^{(k-1)}), & \\
+        z_i^{(k)} = u_0^{(k)} + z_i^{(k-1)} - u_i^{(k)}, &
+      \end{rcases*}
+      \quad \text{for $i=1,\ldots,d$},
+    \end{aligned}
+  \end{equation}
+  for $k=1,2,3,\ldots$.  Importantly, the steps enclosed in curly brace above
+  can all be performed in parallel, so that \eqref{eq:dyk_par} is a parallel
+  version of Dykstra's algorithm \eqref{eq:dyk} for problem \eqref{eq:bap}.  
+
+\item (Bonus, 4 pts) Prove that the iterations \eqref{eq:dyk_par} can be
+  rewritten in equivalent form as
+  \begin{equation}
+    \label{eq:cd_dyk_par}
+    w_i^{(k)} = \argmin_{w_i \in \R^{p_i}} \;  
+    \frac{1}{2} \Big\|y - Xw^{(k-1)} + X_i w_i^{(k-1)}/\gamma_i -  
+    X_i w_i/\gamma_i\Big\|_2^2 + h_i (w_i/\gamma_i),
+    \quad i=1,\ldots,d,
+  \end{equation}
+  for $k=1,2,3,\ldots$.  Importantly, the updates above can all be performed in
+  parallel, so that \eqref{eq:cd_dyk_par} is a parallel version of coordinate
+  descent \eqref{eq:cd} for problem \eqref{eq:reg}.  Hint: use an inductive
+  argument and the result in part 4, similar to your proof in part 5.
+
+\end{enumerate}
+\end{document}

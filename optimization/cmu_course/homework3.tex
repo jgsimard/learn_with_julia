@@ -1,0 +1,401 @@
+\documentclass{article}
+
+\usepackage[left=1.25in,top=1.25in,right=1.25in,bottom=1.25in,head=1.25in]{geometry}
+\usepackage{verbatim,float,url,enumerate}
+\usepackage{graphicx,subfigure,psfrag}
+\usepackage{natbib}
+\usepackage{environ}
+\usepackage{pifont}       %Justin
+\usepackage{xcolor}       %Justin
+\usepackage{mathtools}    %Wenbo
+\usepackage{cancel}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{amsfonts,amsmath,amssymb,amsthm}
+
+\newtheorem{algorithm}{Algorithm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}                            
+
+\newcommand{\argmin}{\mathop{\mathrm{argmin}}}
+\newcommand{\argmax}{\mathop{\mathrm{argmax}}}
+\newcommand{\minimize}{\mathop{\mathrm{minimize}}}
+\newcommand{\maximize}{\mathop{\mathrm{maximize}}}
+\newcommand{\st}{\mathop{\mathrm{subject\,\,to}}}
+\newcommand{\dist}{\mathop{\mathrm{dist}}}
+
+\newcommand{\minimizewrt}[1]{\underset{#1}{\minimize}}   
+\newcommand{\maximizewrt}[1]{\underset{#1}{\maximize}}  
+\newcommand{\subjectto}{\mbox{subject to}}                       
+\newcommand{\ones}{\mathrm 1}                                          
+\newcommand{\diag}{\mathop{\rm diag}}  
+
+\newcommand{\reals}{\mathbb R}
+\newcommand{\prox}{\operatorname{prox}}
+\newcommand{\dom}{\operatorname{dom}}
+\def\R{\mathbb{R}}
+\def\E{\mathbb{E}}
+\def\P{\mathbb{P}}
+\def\Cov{\mathrm{Cov}}
+\def\Var{\mathrm{Var}}
+\def\half{\frac{1}{2}}
+\def\sign{\mathrm{sign}}
+\def\supp{\mathrm{supp}}
+\def\th{\mathrm{th}}
+\def\tr{\mathrm{tr}}
+\def\dim{\mathrm{dim}}
+\def\hbeta{\hat{\beta}}
+
+\begin{document}
+
+\title{Homework 3}
+\author{\Large Convex Optimization 10-725}
+\date{{\bf Due Friday, October 12 at 11:59pm} \\
+\bigskip
+Submit your work as a single PDF on Gradescope, including the source code.\\
+Make sure to prepare your solution to each problem on a separate page.  \\
+On Gradescope, please select source code along with the corresponding problem. \\
+\textbf{Please choose either Q1 or Q2} ($\text{Score}=\max(\text{Q1},\text{Q2})+\text{Q3}+\text{Q4}$).\\
+\bigskip 
+Total: 75 points}
+\maketitle
+
+\section{Duality in Linear Programs (20 pts) [Akash]}
+\begin{enumerate}[(a, 2pts each)]
+	\item Derive the duals of the following LPs
+
+		i, 2pts) $\max_x 2x_1 + x_2$ subject to $x_1 - x_2 \leq 4, x_1 - x_2 \leq 2, x_1 \geq 0, x_2 \geq 0$ 
+
+		ii, 2pts) $\max_x 2x_1 + x_2$ subject to $-x_1 - x_2 \leq -4, x_1 + x_2 \leq 2, x_1 \geq 0, x_2 \geq 0$ 
+
+		iii, 2pts) $\max_x 2x_1 + x_2$ subject to $-x_1 + x_2 \leq -4, x_1 - x_2 \leq 2, x_1 \geq 0, x_2 \geq 0$ 
+
+		What can you say about the primal and dual feasibility and optimal values in all these settings? 
+
+	\item[(b, 14pts)] Both Ryan and the TAs want many students to attend their office hours. However, the TAs have noticed that students are less likely to go to their office hours if they attend Ryan`s, so the TAs decide to sabotage Ryan's 	office hours. The TAs will block the paths between class in Wean and Ryan's office in Baker. 
+	
+		\quad \quad In this problem, we think of the CMU campus as a directed graph $G = (V,E,C)$. Here, vertices $v_i,v_j\in V$ correspond to the $i^{th}$ and $j^{th}$ landmark, e.g. the Wean caf\'{e} and the $1^{st}$ floor of Porter, the directed edge $(i,j) \in E$ is the directed path from $v_i$ to $v_j$, and the capacity $c_{ij} \in C$ is the maximum number of convex optimization students that can pass through $(i,j)$. Students start from $v_s$, our classroom in Wean, and move along the directed edges towards $v_t$, Ryan's office. We assume there are no edges that end in $v_s$ or originate in $v_t$.
+		
+		\quad \quad The TAs decide to block paths by building barricades. However, they want to do as little physical labor as possible, so they only want to block the tightest path (i.e. smallest total capacity) in a way that still prevents every student from reaching Ryan's office.
+		
+		\quad \quad In other words, the TAs want to find a partition, or cut, $C = (S,T)$ of $V$, such that $v_s \in S$ and $v_t \in T$ and it has minimum capacity. The capacity of a cut is defined as:
+		\begin{equation*}
+		    c(S,T) = \sum_{(i,j)\in E}b_{ij}c_{ij}
+		\end{equation*}
+		where $b_{ij} = 1$ if $v_i \in S$ and $v_j \in T$, and $b_{ij} = 0$ otherwise.
+		
+		\quad \quad The TA's min cut problem can be formulated as follows:
+		    \begin{equation} \label{eq:ILP}
+	        \begin{aligned}
+			\min_{b\in \mathbb{R}^{|E|}, x\in \mathbb{R}^{|V|}} \quad & \sum_{(i,j)\in E}b_{ij}c_{ij} \\
+			\subjectto \quad  \quad   & x_s = 1, x_t = 0 \\
+					     &  b_{ij}  \geq x_i - x_j \\
+	    				     & b_{ij}, x_i, x_j \in \{0,1\} \\
+	    				     & \text{for all} \; (i,j) \in E
+			\end{aligned}
+			\end{equation}
+	    \begin{enumerate}
+	    \item[( i. 2pts)] Explain what the variables $x_i$ and $x_j$ for all $(i,j) \in E$ mean and why the introduction of these variables is necessary (hint: what would happen if the $x_i,x_j$ variables weren`t introduced?).
+		\item[( ii. 2pts)]  The problem in \eqref{eq:ILP} is an integer linear program (ILP), because its variables take integer values. Because ILPs are mostly difficult to solve, they are often relaxed to LPs. Consider the following relaxation of the integer constraints in \eqref{eq:ILP}:
+		    \begin{equation}
+	        \begin{aligned}
+			\min_{b\in \mathbb{R}^{|E|}, x\in \mathbb{R}^{|V|}} \quad & \sum_{(i,j)\in E}b_{ij}c_{ij} \\
+			\subjectto \quad    \quad  &  b_{ij}  \geq x_i - x_j \quad \text{for all} \; (i,j) \in E \\
+	    				                & b \geq 0 \\
+	    				                & x_s - x_t \geq 1 \\
+			\end{aligned}
+			\label{eq:LP}
+			\end{equation}
+		How does the optimal value of the original ILP, $f^{\star}_{ILP}$, compare to the optimal value of the relaxed LP, $f^{\star}_{LP}$?
+		\item[( iii. 6pts)]  Next, derive the dual of \eqref{eq:LP}. Use the following dual variables $f \in \mathbb{R}^{|E|}, y \in \mathbb{R}^{|E|}, w \in \mathbb{R}$ corresponding to the constraints in the order they appear in \eqref{eq:LP}.
+		\item[( iv. 2pts)]  What does each constraint of the dual you derived in (iii.) mean in the setting of our path-blocking problem? Hint: the dual of the relaxed min-cut problem is called max-flow.
+		\item[ (v. 1pt)]  Finally, how does the optimal value of the relaxed LP, $f^{\star}_{LP}$, compare to the optimal value of the dual, $f^{\star}_{dual}$? 
+		\item[(vi. 1pt)] Interestingly, a well-known theorem (the max-flow min-cut theorem) tells us is that the original ILP and the max flow problem have equal optimal criterion values. What does this result imply about the tightness of the convex relaxation of the ILP?
+		\end{enumerate}
+
+\end{enumerate}
+\section{Practice with KKT conditions and duality (20 points) [Po-Wei]}
+\begin{enumerate}[(a)]
+  \item  Take the LP:
+    \begin{equation}\label{eq:orig-linear-program}
+      \text{min}_x \;\; c^Tx \text{ such that } Ax=b \text{
+        and } x \ge 0
+    \end{equation}
+    (where the inequality is defined element-wise) and now consider the second,
+    similar optimization problem
+    \begin{equation}\label{eq:barrierized-linear-program}
+      \text{min}_x\;\; c^Tx - {\tau} \sum_i \log (x_i) \text{ such that } Ax=b
+    \end{equation}
+    The second term in the objective is sometimes called the log barrier
+    function, and acts as a `soft' inequality constraint, because it will tend
+    to positive infinity as any of the $x_i$ tend to zero from the right.
+    \begin{enumerate}
+\item[(i, 2pts)] Derive the dual of the original LP.
+\item[(ii, 2pts)] Then derive the KKT of original LP in    \eqref{eq:orig-linear-program}.
+\item[(iii, 2pts)] Then derive the KKT of the second problem with the log barrier problem
+    in \eqref{eq:barrierized-linear-program}.  
+\item[(iv, 2pts)] Describe the differences in the two KKT conditions. (Hint: what can you
+    observe about the second set of KKT conditions when $\tau$ is taken to be
+    large?)  
+    \end{enumerate}
+
+    Throughout, assume that $\{x: x>0, Ax=b\}$ and $\{y:{ A^Ty > -c}\}$ are
+    non-empty. i.e. the primal LP and its dual are both strictly feasible.
+
+\item The Kanotorovich inequality (\emph{BV Additional Exercise 4.14)}.
+\begin{enumerate}[(i)]
+\item[(i, 6pts)] Suppose $a \in \R^n$ with $a_1 \geq a_2 \geq a_3 > ... \geq a_n > 0$, and $b \in \R^n$ with $b_k = 1/a_k$. Derive the KKT conditions for the convex optimization: 
+\begin{align*}
+    &\min \quad -\log(a^Tx) -\log(b^Tx) \\
+    &\st\quad\; x \in \R^n_{+}, \qquad \textbf{1}^Tx = 1
+\end{align*}
+Where $\R^n_{+}$ is the positive reals. Show that $x = (1/2, 0, ...,0, 1/2)$ is the optimal solution.
+
+\item[(ii, 6pts)] Suppose $A \in {\mathbb{S}^n}_{++}$ (set of symmetric positive definite matrices) with eigenvalues $\lambda_k$ sorted in decreasing order. Apply the result of part (b.i), with $a_k = \lambda_k$, to prove the Kantorovich inequality:
+$$2(u^TAu)^{1/2} (u^TA^{-1}u)^{1/2} \leq \sqrt{\frac{\lambda_1}{\lambda_n}} + \sqrt{\frac{\lambda_n}{\lambda_1}}  $$
+for all u with $\|u\|_2 = 1$.
+
+\end{enumerate}
+\end{enumerate}
+\section{Screening rules for support vector machines (28 points) [Ryan]}
+
+As we've seen, the KKT conditions can be an extremely useful tool.  In machine
+learning, a series of papers have emerged that use the KKT conditions to derive
+what are called {\it screening rules}, originally developed in the context of
+$\ell_1$ regularization
+problems.\footnote{It all started with El Ghaoui et al.\ (2010):
+  http://www.eecs.berkeley.edu/Pubs/TechRpts/2010/EECS-2010-126.pdf.} 
+These are analytic (closed-form) rules that we can apply to any given data set
+$(x_i,y_i) \in \R^p \times \mathcal{Y}$, $i=1,\ldots,n$, to determine {\it a 
+  priori} that certain dimensions of the feature space $\R^p$ would not
+contribute to (say) the lasso or logistic lasso solution, and thus these could
+be ``safely'' eliminated before solving (say) the lasso or logistic lasso
+optimization problem.  The rules are usually based on manipulation of the KKT
+conditions, and typically, properties the solution to the optimization at hand
+at a ``nearby'' tuning parameter value.
+
+Screening rules have also been developed for support vector machine (SVMs).  In  
+this problem, we'll follow one of the early
+analyses\footnote{See
+  http://jmlr.csail.mit.edu/proceedings/papers/v28/ogawa13b.pdf; you may read
+  this paper if it helps, but you must write out arguments to all parts of this
+  problem in your own words.}
+and look at a constrained version of SVMs: given $y_i \in 
+\{-1,1\}$ and $x_i \in \R^p$, $i=1,\ldots,n$, we solve
+\begin{equation}
+\label{eq:svm_primal}
+\min_w \; \frac{1}{2}\|w\|_2^2 \;\; \st \;\; 
+\sum_{i=1}^n [1 - y_i f_w(x_i)]_+ \leq s, 
+\end{equation}
+where $f_w(x) = w^Tx$.  We write $w^*(s)$ for the unique solution in
+\eqref{eq:svm_primal}.  For convenience, we abbreviate $f_{w^*(s)}(x)$ by 
+$f^*(x|s)$.  We also abbreviate $J(w)=(1/2) \|w\|_2^2$ and $H(w)=\sum_{i=1}^n [1 
+- y_i f_w(x_i)]_+$.  
+ 
+\bigskip
+\noindent
+(a, 5pts) Prove that problem \eqref{eq:svm_primal} and 
+$$
+\min_w \; \frac{1}{2}\|w\|_2^2 \;\; \st \;\;
+\sum_{i\notin\mathcal{R}} [1 - y_i f_w(x_i)]_+ \leq s, 
+$$
+have the same solution, where $\mathcal{R} = \{i  : y_i f^*(x_i|s)>1 
+\}$. In other words, show that the instances $i\in\mathcal{R}$ do not 
+affect the solution of \eqref{eq:svm_primal}, and can hence be safely 
+discarded. Hint: look at the KKT conditions on all $n$ points, and on only on
+the points in $\mathcal{R}$.  
+
+\bigskip
+\noindent
+(b) Fix any $s_a > s_b$.  
+
+\begin{enumerate}[(i)]
+\item[(i, 3pts)] Show that $s \in [s_b,s_a] \implies J(w^*(s)) \leq J(w^*(s_b))$.  
+
+\item[(ii, 4pts)] Show that $s\in[s_b,s_a] \implies
+  w^*(s_a)^T(w^*(s)-w^*(s_a))\geq 0$.  Hint: consider the KKT
+  conditions for \eqref{eq:svm_primal}, consider subgradients of $H(w)$, and 
+  primal feasibility of $w^*(s)$ for \eqref{eq:svm_primal} when the tuning
+  parameter is $s_a$.  
+
+
+\item[(iii, 3pts)] Show that we may safely discard a point $i$ from the optimization in
+  problem \eqref{eq:svm_primal} with tuning parameter $s \in [s_b,s_a]$ if
+  $g_{[s_b,s_a]}(i)>1$ where:  
+\begin{equation}\label{eq:screen}
+g_{[s_b,s_a]}(i) = \min_{w\in \Theta_{[s_b,s_a]}} \; y_i f_w(x_i) ,
+\end{equation}
+and $\Theta_{[s_b,s_a]} = \{ w : J(w) \leq J(w^*(s_b)) \wedge
+w^*(s_a)^T(w-w^*(s_a))\geq 0 \}$ (and we use the shorthand $u \wedge v =
+\min\{u,v\}$). 
+
+\end{enumerate}
+
+\bigskip
+\noindent
+(c) We now reduce the screening rule of $g_{[s_b,s_a]}(i)>1$ to an analytical
+formula below. Let $\gamma_b = J(w^*_b)$ and $\gamma_a = J(w^*_a)$.  
+
+\begin{enumerate}[(i)]
+\item[(i, 3pts)] Write out the Lagrangian for the problem \eqref{eq:screen} with
+  Lagrange multipliers of $\mu$ and $\nu$ for constraints $J(w)\leq\gamma_b$ and 
+  $w^*(s_a)^T(w-w^*(s_a))\geq 0$ respectively. 
+
+
+\item[(ii, 3pts)] Write out the KKT conditions for the problem \eqref{eq:screen}. 
+Use these conditions to get an expression for solution to this problem (call 
+it) $z$ in terms of the optimal dual variables $\mu,\nu$, and furthermore, an 
+expression for $y_i z^T x_i$ in terms of $\mu,\nu$ and $f^*(x_i|s_a)$.
+
+
+\item[(iii, 4pts)] Show that:
+$$
+g_{[s_b,s_a]}(i) = \begin{cases} 
+-\sqrt{2\gamma_b}\|x_{i}\| & 
+\text{if $-\frac{y_i f^*(x_i|s_a)}{\|x_i\|}\geq
+  \frac{\sqrt{2}\gamma_a}{\sqrt{\gamma_b}}$} \\ 
+y_i f^*(x_i|s_a) -
+\sqrt{\frac{\gamma_b-\gamma_a}{\gamma_a}
+\left(2\gamma_a\|x_i\|_2^2-f^*(x_i|s_a)^2\right)} 
+& \text{otherwise.} 
+\end{cases}
+$$
+Hint: use the sign of $-\frac{y_i f^*(x_i|s_a)}{\|x_i\|} - \frac{\sqrt{2}\gamma_a}{\sqrt{\gamma_b}}$ to guide whether $\nu=0$. 
+
+
+\item[(iv, 3pts)] Further simplify the screening rule of $g_{[s_b,s_a]}(i)>1$ to:
+$$
+y_i f^*(x_i|s_a) > 1 \;\; \text{and} \;\; y_i f^*(x_i|s_a) -
+\sqrt{\frac{\gamma_b-\gamma_a}{\gamma_a}
+\left(2\gamma_a\|x_i\|_2^2-f^*(x_i|s_a)^2\right)} > 1. 
+$$
+
+\end{enumerate}
+\section{Support vector machines and duality (27 points) [Wenbo]}
+
+In binary classification, we are interested in finding a hyperplane that separates two clouds of points living in, say, $\reals^p$.  The support vector machine (SVM), which we talked about in class, is a pretty popular method for doing binary classification; to this day, it's (still) used in a number of fields outside of just machine learning and statistics.
+
+One issue arises with the standard SVM, though, when the data points are not linearly separable in $\reals^p$, i.e., we cannot find a hyperplane which separates the two classes of points. In such cases, it is often useful to map the data points to a different space (potentially of higher dimension than $\reals^p$) where the points become separable. Such maps are called nonlinear feature maps. 
+
+In this problem, you will develop a SVM with the RBF kernel to address the nonlinearly separable problem of the standard SVM.
+You will implement your own RBF-SVM in part (b) of this question, but as a starting point, we will first investigate the SVM dual problem in part (a) of this question.
+
+Throughout, we assume that we are given $n$ data samples, each one taking the form $(x_i, y_i)$, where $x_i \in \reals^p$ is a feature vector and $y_i \in \{-1,+1\}$ is a class.  In order to make our notation more concise, we can transpose and stack the $x_i$ vertically, collecting these feature vectors into the matrix $X \in \reals^{n \times p}$; doing the same thing with the $y_i$ lets us write $y \in \{-1,+1\}^n$.
+
+\subsection*{Part (a)}
+The primal problem of SVM with slack variables is
+\begin{equation}
+\begin{array}{ll}
+\minimizewrt{\mathclap{\beta \in \reals^p, \; \beta_0 \in \reals, \; \xi \in \reals^n}} & \tfrac1{2} \| \beta \|_2^2 + C \sum_{i=1}^{n} \xi_i \\
+\subjectto & \xi_i \geq 0,  \quad i=1,\ldots,n, \\
+		   & y_i( x_i^T \beta + \beta_0) \geq 1 - \xi_i, \quad i=1,\ldots,n,
+\end{array}
+\label{eq:svm:primal}
+\end{equation}
+where $\beta \in \reals^p, \; \beta_0 \in \reals, \; \xi = (\xi_1, \ldots, \xi_n) \in \reals^n$ are our variables, and $C$ is a positive margin coefficient chosen by the implementer.  (Just to remind you of some of the intuition here: problem \eqref{eq:svm:primal} can be viewed as another way of writing a squared $\ell_2$-norm penalized hinge loss minimization problem.)
+
+\begin{enumerate}
+\item[(i, 2pts)] Does strong duality hold for problem \eqref{eq:svm:primal}?  Why or why not?  (Your answer to the latter question should be short.)
+
+\item[(ii, 3pts)] Derive the Karush-Kuhn-Tucker (KKT) conditions for problem \eqref{eq:svm:primal}.  Please use $\alpha \in \reals^n$ for the dual variables (i.e., Lagrange multipliers) associated with the constraints ``$y_i( x_i^T \beta + \beta_0) \geq 1 - \xi_i, \; i=1,\ldots,n$'', and $\mu \in \reals^n$ for the dual variables associated with the constraints ``$\xi_i \geq 0, \; i=1,\ldots,n$''.
+
+\item[(iii, 3pts)] Show that the SVM dual problem can be written as
+\begin{equation}
+\begin{array}{ll}
+\maximizewrt{\alpha \in \reals^n} & -(1/2) \alpha^T \tilde X \tilde X^T \alpha + \ones^T \alpha \\
+\subjectto & \alpha^Ty = 0, \\
+           & 0 \leq \alpha \leq C \ones,
+\end{array}
+\label{eq:svm:dual}
+\end{equation}
+where $\tilde X \in \reals^{n \times p} = \diag(y) X$, $\alpha$ is the dual variable, and the $\ones$'s here are vectors (of the appropriate and possibly different sizes) containing only ones.
+
+\item[(iv, 2pts)] Give an expression for the optimal $\beta$ in terms of the optimal $\alpha$ variables and explain how.
+
+\item[(v, 2pt)] What kind of problem class are both \eqref{eq:svm:primal} and \eqref{eq:svm:dual}?  You may choose none, one, or more than one of the following:
+\begin{itemize}
+\item linear program
+\item quadratic program
+\item second-order cone program
+\item semidefinite program
+\item cone program
+\end{itemize}
+
+Now we are going to take a glimpse of the ``magic'' of kernels. Let's first see what is a kernel. Given a feature map $\phi: \reals^d \to \mathcal{K}$, where $\mathcal{K}$ is a Hilbert space (i.e., a vector space with inner product), the kernel $K: \reals^d \times \reals^d \to \reals$ is the corresponding inner product function
+\begin{align}
+K(x_i, x_j) \coloneqq \langle \phi(x_i), \phi(x_j)\rangle.
+\label{eq:kernel}
+\end{align}
+Here the feature map, as we mentioned earlier, is used to ``embed'' the original data into a higher dimensional space such that they become separable.
+Recall the objective of the dual SVM, and it can be rewritten as
+\begin{align}
+&-\tfrac1{2} \alpha^T \tilde X \tilde X^T \alpha + \ones^T \alpha \\
+\Leftrightarrow & -\tfrac1{2} \alpha^T YXX^TY \alpha + \ones^T \alpha \\
+\Leftrightarrow & -\tfrac1{2} \alpha^T YGY \alpha + \ones^T \alpha, \\
+\label{eq:obj_kernel}
+\end{align}
+where $Y = \diag(y)$, and $G = XX^T$ is the so called Gram matrix, $G_{ij} = \langle x_i, x_j\rangle$. One nice property of the Gram matrix of a kernel $K$ is that
+\begin{align}
+K(x_i, x_j) = \langle \phi(x_i), \phi(x_j)\rangle = G_{ij}.
+\label{eq:kernel_gram}
+\end{align}
+Hence, the kernel builds a bridge between the feature maps and the original dual problem.
+
+\item[(vi, 3pts)] Show that the Gram matrix of a kernel $K$ is positive semidefinite.
+Let the dimension of the feature space after the feature map be $p'$. If $p << p'$, which one is more efficient to solve, the primal or the dual? Why?
+
+Now we are going to probe into the infinite dimensional space. We have seen so far how to build a kernel from a given feature map, but can we do the opposite? Suppose a map $K$ is a kernel, can we find the corresponding feature map $\phi$ such that $K(x_i, x_j) = \langle \phi(x_i), \phi(x_j)\rangle_{\mathcal{K}}$? Fortunately, thanks to the Mercer's theorem, we know that we are able to construct the feature map by finding the eigenfunctions of the integral operator with the kernel. 
+
+There is no need to go into such difficulty of finding the feature maps, however, since we have the kernel-feature map equivalence (\ref{eq:kernel_gram}). We only need to compute the value of the kernel function, avoiding the complexity of computing the inner product of high dimensional feature maps. 
+
+Given this intuition, we consider the radial basis function (RBF) kernel
+\begin{align}
+	K(x_i, x_j) = \langle \phi(x_i), \phi(x_j)\rangle = \exp{\left(-\gamma \|x_i - x_j\|^2 \right)},
+\end{align}
+where $\gamma$ controls the bandwidth of the kernel. For RBF kernel, the corresponding feature maps have infinite dimensional feature spaces.
+The RBF kernel is a reasonable measure of $x_i$ and $x_j$'s similarity, and is close to $1$ when $x_i$ and $x_j$ are close, and near $0$ when they are far apart.
+In the following problems, you are going to use the RBF kernel in SVM.
+\end{enumerate}
+
+\subsection*{Part (b)}
+        \textbf{Please submit your code as an appendix to this problem}.
+\begin{enumerate}
+    \item[(i, 4pts)] Implement the dual SVM in problem~\eqref{eq:svm:dual} with the RBF kernel using a standard QP solver (typically available as ``quadprog`` function in Matlab, R, or in \texttt{Mathprogbase.jl} in Julia; you may also refer \texttt{CVXOPT} in Python, \texttt{GORUBI}, or \texttt{MOSEK}).
+    Load a small synthetic toy problem with inputs $X \in \mathbb R^{863 \times 2}$ and labels $y \in \{-1, 1\}^{863}$ from \texttt{data.txt} and solve the dual SVM with $\gamma = \{10, 50, 100, 500\}$ and $C = \{0.01, 0.1, 0.5, 1\}$. Report the optimal objective values of the dual. 
+    
+    \item[(ii, 2pts)] For each of the parameter pairs, show a scatter plot of the data
+        and plot the decision border (where the predicted class label changes) on top.
+        How and why does the decision boundary change with different pair of parameters?
+
+	\item[(iii, 2pts)] For each of the parameter pairs, identify the support vectors (i.e., data points with nonzero $\alpha_i$s; in implementation select $\alpha > 1e^{-5}$) in the plots, and report the number of support vectors.
+	What can in general be said about the location of a data point $i$ with respect of the boundary of the margin if
+        \begin{itemize}
+            \item $\alpha_i = 0$;
+            \item $\alpha_i \in (0, C)$;
+            \item $\alpha_i = C$?
+        \end{itemize}
+     
+    \item[(iv, 2pts)]
+        Looking back at the KKT conditions derived in part (a, ii), what can be said about the
+        influence of the data points that lie strictly on the correct side of the
+        margin?
+        How would the decision boundary change if we removed these data points from
+        the dataset and recomputed the optimal solution? (Give a qualitative
+        answer, no need to actually implement that.)
+
+    \item[(v, 2pt)]
+        SVM minimizes the $\ell_2$-regularized
+        hinge-loss, a convex upper bound on the classification error.
+        For each of the above parameter pairs $(C, \gamma)$, predict the class labels for each data point (of the same set that the
+        SVM was trained on). Report the classification error for each class and the total classification error.
+
+    \item[{\bf Bonus}] Implement the screening rules for SVM derived in problem~$3$.
+\end{enumerate}
+
+\end{document}
